@@ -3,9 +3,11 @@ import { useSelector, useDispatch } from "react-redux";
 import Cart from "./components/Cart/Cart";
 import Layout from "./components/Layout/Layout";
 import Products from "./components/Shop/Products";
-import { uiActions } from "./store/UIslice";
 import Notification from "./components/UI/Notification";
-let initial=true;
+
+import { sendCartData } from "./store/cartActions";
+import { fetchData } from "./store/cartActions";
+let isInitial=true;
 function App() {
   const dispatch = useDispatch();
   const showCart = useSelector((state) => state.ui.cartIsVisible);
@@ -13,64 +15,24 @@ function App() {
 
   const notification=useSelector(state=>state.ui.notification);
 
-  useEffect(() => {
-    const sendCartData = async () => {
-      dispatch(
-        uiActions.showNotification({
-          status: "pending",
-          title: "Sending",
-          message: "Sending Cart data",
-        })
-      );
+  useEffect(()=>{
 
-      try {
-        const response = await fetch(
-          "https://reduxlearning-99b9a-default-rtdb.firebaseio.com/Cart.json",
-          {
-            method: "PUT",
-            body: JSON.stringify(cart),
-          }
-        );
+    dispatch(fetchData())
+  },[dispatch])
 
-        if (!response.ok) {
-          throw new Error("Sending data to cart failed");
-        }
+  useEffect(()=>{
 
-        dispatch(
-          uiActions.showNotification({
-            status: "success",
-            title: "Success",
-            message: "Sent Cart data successfully",
-          })
-        );
-      } catch (error) {
-        dispatch(
-          uiActions.showNotification({
-            status: "error",
-            title: "Error",
-            message: "Sending data to cart failed",
-          })
-        );
-      }
-    };
-
-    if(initial){
-      initial=false;
+    if(isInitial){
+      isInitial=false;
       return;
     }
+    if(cart.changed){
+      
+    dispatch(sendCartData(cart));
+    }
 
-    sendCartData().catch((error) => {
-      // Handle error if needed
-      dispatch(
-        uiActions.showNotification({
-          status: "error",
-          title: "Error",
-          message: "Sending data to cart failed",
-        })
-      );
-    });
-  }, [cart, dispatch]);
 
+  },[cart,dispatch])
   return (
     <>
     {notification && <Notification
